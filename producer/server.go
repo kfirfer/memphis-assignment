@@ -4,17 +4,22 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"github.com/nats-io/nats.go"
+	"io"
 	"net/http"
+	"strings"
 )
 
 func Start(natsClient *nats.Conn) error {
 	e := echo.New()
-	e.GET("/", func(c echo.Context) error {
-		err := natsClient.Publish("foo", []byte("Hello World"))
+	e.POST("sendMessage", func(c echo.Context) error {
+		bodyReader := c.Request().Body
+		buf := new(strings.Builder)
+		_, err := io.Copy(buf, bodyReader)
+		err = natsClient.Publish("messages", []byte(buf.String()))
 		if err != nil {
 			return err
 		}
-		return c.String(http.StatusOK, "Hello, World!")
+		return c.String(http.StatusOK, "Sent to queue")
 	})
 	e.Logger.Fatal(e.Start(":1323"))
 	return nil

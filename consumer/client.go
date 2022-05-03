@@ -1,42 +1,47 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/nats-io/nats.go"
+	"github.com/novalagung/natskeepalivesubscribe"
+	"strings"
 )
 
-func Start(natsClient *nats.Conn) error {
-	//sub, err := natsClient.SubscribeSync("foo")
-	//if err != nil {
-	//	return err
-	//}
-	_, err := natsClient.Subscribe("foo", func(m *nats.Msg) {
-		fmt.Printf("Received a message: %s\n", string(m.Data))
-	})
-	if err != nil {
-		return err
-	}
+func Start() error {
+	natsURL := "nats://localhost:4222"
+	subject := "messages"
+	natskeepalivesubscribe.KeepAliveSubscribe(natsURL, subject, func(msg *nats.Msg) (interface{}, error) {
+		// parse payload
+		payload := make(map[string]interface{})
+		err := json.Unmarshal(msg.Data, &payload)
+		if err != nil {
+			return nil, err
+		}
 
-	//message, err := sub.NextMsg(60)
-	//fmt.Println("message: ", message)
+		// handle the request
+		switch strings.ToUpper(payload["method"].(string)) {
+		case "OPTIONS":
+			// ...
+		case "GET":
+			// ...
+		case "POST":
+			fmt.Println(payload["message"])
+			msg.Reply = "ok"
+		case "PATCH":
+			// ...
+		case "PUT":
+			// ...
+		case "DELETE":
+			// ...
+		}
+		return nil, fmt.Errorf("invalid http method")
+	})
 	return nil
 }
 
-func GetNatsClient() (*nats.Conn, error) {
-	natsClient, err := nats.Connect(nats.DefaultURL)
-	if err != nil {
-		return nil, err
-	}
-	return natsClient, nil
-
-}
 func main() {
-	natsClient, natsConnectErr := GetNatsClient()
-	if natsConnectErr != nil {
-		fmt.Println(natsConnectErr)
-		return
-	}
-	natsErr := Start(natsClient)
+	natsErr := Start()
 	if natsErr != nil {
 		fmt.Println(natsErr)
 		return
