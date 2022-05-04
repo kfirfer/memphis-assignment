@@ -16,15 +16,9 @@ func Start(jsClient nats.JetStreamContext) error {
 		bodyReader := c.Request().Body
 		buf := new(strings.Builder)
 		_, err := io.Copy(buf, bodyReader)
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
+		CheckErr(err)
 		_, err = jsClient.PublishAsync("messages", []byte(buf.String()))
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
+		CheckErr(err)
 		select {
 		case <-jsClient.PublishAsyncComplete():
 		case <-time.After(10 * time.Second):
@@ -38,34 +32,26 @@ func Start(jsClient nats.JetStreamContext) error {
 
 func GetNatsClient() (*nats.Conn, error) {
 	natsClient, err := nats.Connect(nats.DefaultURL)
-	if err != nil {
-		return nil, err
-	}
+	CheckErr(err)
 	return natsClient, nil
 
 }
 func main() {
 	natsClient, err := GetNatsClient()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	CheckErr(err)
 	js, err := natsClient.JetStream(nats.PublishAsyncMaxPending(256))
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	CheckErr(err)
 	_, err = js.AddStream(&nats.StreamConfig{
 		Name:     "MESSAGES",
 		Subjects: []string{"messages"},
 	})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	CheckErr(err)
 	echoErr := Start(js)
-	if echoErr != nil {
-		fmt.Println(echoErr)
-		return
+	CheckErr(echoErr)
+}
+
+func CheckErr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }

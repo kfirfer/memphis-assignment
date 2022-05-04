@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/nats-io/nats.go"
-	"log"
 	"time"
 )
 
@@ -13,20 +12,11 @@ func main() {
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(time.Second),
 	)
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	CheckErr(err)
 	js, err := nc.JetStream(nats.PublishAsyncMaxPending(256))
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	CheckErr(err)
 	sub, err := js.PullSubscribe("messages", "messages-durable", nats.PullMaxWaiting(128))
-	if err != nil {
-		log.Fatal(err)
-		return
-	}
+	CheckErr(err)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -39,11 +29,14 @@ func main() {
 		msgs, _ := sub.Fetch(10, nats.Context(ctx))
 		for _, msg := range msgs {
 			err := msg.Ack()
-			if err != nil {
-				log.Fatal(err)
-				return
-			}
+			CheckErr(err)
 			fmt.Println(string(msg.Data[:]))
 		}
+	}
+}
+
+func CheckErr(err error) {
+	if err != nil {
+		panic(err)
 	}
 }
