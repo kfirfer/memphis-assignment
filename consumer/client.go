@@ -9,13 +9,24 @@ import (
 )
 
 func main() {
-	nc, _ := nats.Connect(nats.DefaultURL, nats.RetryOnFailedConnect(true),
+	nc, err := nats.Connect(nats.DefaultURL, nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(time.Second),
 	)
-	js, _ := nc.JetStream(nats.PublishAsyncMaxPending(256))
-
-	sub, _ := js.PullSubscribe("ORDERS.*", "order-review", nats.PullMaxWaiting(128))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	js, err := nc.JetStream(nats.PublishAsyncMaxPending(256))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+	sub, err := js.PullSubscribe("ORDERS.*", "order-review", nats.PullMaxWaiting(128))
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
