@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/nats-io/nats.go"
+	"log"
 	"time"
 )
 
@@ -26,7 +27,11 @@ func main() {
 		}
 		msgs, _ := sub.Fetch(10, nats.Context(ctx))
 		for _, msg := range msgs {
-			msg.Ack()
+			err := msg.Ack()
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
 			fmt.Println(string(msg.Data[:]))
 		}
 	}
