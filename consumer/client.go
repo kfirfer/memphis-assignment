@@ -6,6 +6,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/novalagung/natskeepalivesubscribe"
 	"strings"
+	"time"
 )
 
 func Start() error {
@@ -41,6 +42,20 @@ func Start() error {
 }
 
 func main() {
+	nc, _ := nats.Connect(nats.DefaultURL, nats.RetryOnFailedConnect(true),
+		nats.MaxReconnects(10),
+		nats.ReconnectWait(time.Second),
+	)
+	_, err := nc.QueueSubscribe("messages", "workers", func(m *nats.Msg) {
+		fmt.Printf("Received a message: %s\n", string(m.Data))
+	})
+	if err != nil {
+		return
+	}
+	for true {
+		time.Sleep(time.Millisecond * 100)
+	}
+	// Tests
 	natsErr := Start()
 	if natsErr != nil {
 		fmt.Println(natsErr)
