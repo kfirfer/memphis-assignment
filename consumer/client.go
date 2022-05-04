@@ -46,19 +46,38 @@ func main() {
 		nats.MaxReconnects(10),
 		nats.ReconnectWait(time.Second),
 	)
-	_, err := nc.QueueSubscribe("messages", "workers", func(m *nats.Msg) {
-		fmt.Printf("Received a message: %s\n", string(m.Data))
+	js, _ := nc.JetStream(nats.PublishAsyncMaxPending(256))
+
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return
+	//}
+
+	//sub, err := nc.SubscribeSync("ORDERS.*", nc.Durable("MONITOR"), nats.MaxDeliver(3))
+
+	//_, err := nc.QueueSubscribe("messages", "messages", func(m *nats.Msg) {
+	//	fmt.Printf("Received a message: %s\n", string(m.Data))
+	//
+	//})
+
+	_, err := js.Subscribe("ORDERS.*", func(m *nats.Msg) {
+		fmt.Printf("Received a JetStream message: %s\n", string(m.Data))
 	})
 	if err != nil {
+		fmt.Println(err)
 		return
 	}
 	for true {
+		//sub, _ := js.SubscribeSync("ORDERS.*", nats.Durable("ORDERS"), nats.MaxDeliver(3))
+		//m, _ := sub.NextMsg(60)
+		//fmt.Println(m)
+
 		time.Sleep(time.Millisecond * 100)
 	}
 	// Tests
-	natsErr := Start()
-	if natsErr != nil {
-		fmt.Println(natsErr)
-		return
-	}
+	//natsErr := Start()
+	//if natsErr != nil {
+	//	fmt.Println(natsErr)
+	//	return
+	//}
 }
