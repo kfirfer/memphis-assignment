@@ -17,7 +17,7 @@ func Start(jsClient nats.JetStreamContext) error {
 		buf := new(strings.Builder)
 		_, err := io.Copy(buf, bodyReader)
 
-		_, err = jsClient.PublishAsync("ORDERS.*", []byte(buf.String()))
+		_, err = jsClient.PublishAsync("messages", []byte(buf.String()))
 		select {
 		case <-jsClient.PublishAsyncComplete():
 		case <-time.After(10 * time.Second):
@@ -49,8 +49,8 @@ func main() {
 	natsClient, natsErr := GetNatsClient()
 	js, _ := natsClient.JetStream(nats.PublishAsyncMaxPending(256))
 	_, err := js.AddStream(&nats.StreamConfig{
-		Name:     "ORDERS",
-		Subjects: []string{"ORDERS.*"},
+		Name:     "MESSAGES",
+		Subjects: []string{"messages"},
 	})
 	if err != nil {
 		fmt.Println(err)

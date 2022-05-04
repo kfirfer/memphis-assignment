@@ -22,7 +22,7 @@ func main() {
 		log.Fatal(err)
 		return
 	}
-	sub, err := js.PullSubscribe("ORDERS.*", "order-review", nats.PullMaxWaiting(128))
+	sub, err := js.PullSubscribe("messages", "messages-durable", nats.PullMaxWaiting(128))
 	if err != nil {
 		log.Fatal(err)
 		return
