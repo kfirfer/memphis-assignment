@@ -48,25 +48,33 @@ func main() {
 	)
 	js, _ := nc.JetStream(nats.PublishAsyncMaxPending(256))
 
+	_, _ = js.Subscribe("ORDERS.*", func(msg *nats.Msg) {
+		fmt.Printf("Received a JetStream message: %s\n", string(msg.Data))
+		err := msg.Ack()
+		if err != nil {
+			fmt.Println(err)
+		}
+	})
+	// Simple Sync Durable Consumer (optional SubOpts at the end)
+
+	//sub, _ := js.SubscribeSync("ORDERS.*", nats.Durable("ORDERS"), nats.MaxDeliver(3))
+	//m, _ := sub.NextMsg(20)
+	//fmt.Println(m)
+	// Simple Pull Consumer
+	//sub, _ := js.PullSubscribe("ORDERS.*", "ORDERS")
+	//msgs, _ := sub.Fetch(10)
+	//fmt.Println(msgs)
+	// Unsubscribe
+	//sub.Unsubscribe()
+	//
+	//// Drain
+	//sub.Drain()
+
 	//if err != nil {
 	//	fmt.Println(err)
 	//	return
 	//}
 
-	//sub, err := nc.SubscribeSync("ORDERS.*", nc.Durable("MONITOR"), nats.MaxDeliver(3))
-
-	//_, err := nc.QueueSubscribe("messages", "messages", func(m *nats.Msg) {
-	//	fmt.Printf("Received a message: %s\n", string(m.Data))
-	//
-	//})
-
-	_, err := js.Subscribe("ORDERS.*", func(m *nats.Msg) {
-		fmt.Printf("Received a JetStream message: %s\n", string(m.Data))
-	})
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
 	for true {
 		//sub, _ := js.SubscribeSync("ORDERS.*", nats.Durable("ORDERS"), nats.MaxDeliver(3))
 		//m, _ := sub.NextMsg(60)
