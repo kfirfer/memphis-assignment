@@ -3,12 +3,12 @@ version: '3.7'
 services:
 
   memphis-nats:
-    image: nats-streaming:latest
+    image: nats:latest
     container_name: memphis-nats
     ports:
       - 4222:4222
       - 8222:8222
-    command: "-store file --dir /datastore --jetstream"
+    command: "--store_dir /datastore --jetstream"
 
   memphis-main-services:
     image: alpine
